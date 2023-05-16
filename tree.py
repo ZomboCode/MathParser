@@ -4,6 +4,10 @@ funcs = {"log10":math.log10, "sin":math.sin, "cos":math.cos, "ln":math.log,
          "sqrt":math.sqrt, "tan":math.tan, "cot":math.cos, "acos":math.acos,
          "asin":math.asin, "atan":math.atan, "ceil":math.ceil, "floor":math.floor}
 
+derivatives = {
+    
+}
+
 ops = {"+":0, "-":0, "*":2, "/":2, "^":3, "**":3, "(":-1, ")":-1}
 order = {"+":0, "-":0, "*":0, "/":0, "^":1, "**":1, "(":0, ")":0}
 
@@ -44,3 +48,25 @@ class Tree:
             
             if self.func in funcs:
                 return funcs[self.func](self.children[0].calculate(x))
+
+    def derivative(self):
+        if self.mode == "binary":
+            if self.func == "+" or self.func == "-":
+                return Tree("binary", self.func, [self.children[0].derivative(), self.children[1].derivative()])
+            if self.func == "*":
+                a = Tree("binary", "*", [self.children[0], self.children[1].derivative()])
+                b = Tree("binary", "*", [self.children[0].derivative(), self.children[1]])
+                return Tree("binary", "+", [a, b])
+            
+            if self.func == "/":
+                a = Tree("binary", "*", [self.children[0], self.children[1].derivative()])
+                b = Tree("binary", "*", [self.children[0].derivative(), self.children[1]])
+                c = Tree("binary", "-", [b, a])
+                d = Tree("binary", "*", [self.children[1], self.children[1]])
+                return Tree("binary", "/", [c, d])
+
+        elif self.mode == "single":
+            if self.children[0] == "x":
+                return 1
+            else:
+                return 0
