@@ -4,12 +4,16 @@ funcs = {"log10":math.log10, "sin":math.sin, "cos":math.cos, "ln":math.log,
          "sqrt":math.sqrt, "tan":math.tan, "cot":math.cos, "acos":math.acos,
          "asin":math.asin, "atan":math.atan, "ceil":math.ceil, "floor":math.floor}
 
-derivatives = {
-    
-}
 
 ops = {"+":0, "-":0, "*":2, "/":2, "^":3, "**":3, "(":-1, ")":-1}
 order = {"+":0, "-":0, "*":0, "/":0, "^":1, "**":1, "(":0, ")":0}
+
+def is_num(text):
+    try:
+        float(text)
+        return True
+    except:
+        return False
 
 def operate(a, b, op):
     if op == "+":
@@ -33,6 +37,46 @@ class Tree:
         self.mode = mode
         self.func = func
         self.children = children
+        if self.mode == "binary": #do some (but not all possible) simplifications
+            #print(self.children[0].children, self.func, self.children[1].children[0])
+            if is_num(self.children[0].children[0]) and is_num(self.children[1].children[0]):
+                self.children = [operate(self.children[0].children[0], self.children[1].children[0], self.func)]
+                self.func = "return"
+                self.mode = "single"
+
+            elif is_num(self.children[0].children[0]) and self.children[0].children[0] == 0:
+                if self.func == "*" or self.func == "/" or self.func == "**":
+                    self.children = [0]
+                    self.func = "return"
+                    self.mode = "single"
+                if self.func == "+" or self.func == "-":
+                    self.func = self.children[1].func
+                    self.mode = self.children[1].mode
+                    self.children = [self.children[1]]
+                
+
+            elif is_num(self.children[1].children[0]) and self.children[1].children[0] == 0:
+                if self.func == "*" or self.func == "**":
+                    self.children = [0]
+                    self.func = "return"
+                    self.mode = "single"
+                if self.func == "+" or self.func == "-":
+                    self.func = self.children[0].func
+                    self.mode = self.children[0].mode
+                    self.children = self.children[0].children
+
+                if self.func == "/":
+                    self.children = [math.inf]
+                    self.func = "return"
+                    self.mode = "single"
+                  
+    def printTree(self):
+        if self.func != "return":
+            print(self.func)
+            for child in self.children:
+                child.printTree()    
+        else:
+            print(self.children[0])
 
     def calculate(self, x):
         if self.mode == "binary":
@@ -64,9 +108,30 @@ class Tree:
                 c = Tree("binary", "-", [b, a])
                 d = Tree("binary", "*", [self.children[1], self.children[1]])
                 return Tree("binary", "/", [c, d])
-
+            
+            if self.func == "**":
+                if (self.children[0].func == "return" and self.children[0].children[0] == "x" and
+                    self.children[1].func == "return" and is_num(self.children[1].children[0])):
+                    a = Tree("binary", "**", [self.children[0], Tree("single", "return", [self.children[1].children[0] - 1])])
+                    a.printTree()
+                    return Tree("binary", "*", [Tree("single", "return", [self.children[1].children[0]]), a]) 
+                else:
+                    return self
+                
         elif self.mode == "single":
-            if self.children[0] == "x":
-                return 1
-            else:
-                return 0
+            if self.func == "return":
+                if self.children[0] == "x":
+                    return Tree("single", "return", [1])
+                else:
+                    return Tree("single", "return", [0])
+        
+    def intergral(self, a, b, step):
+        ans = 0
+        a = step/2
+        while a < b:
+            ans += self.calculate(a) * step
+            a += step
+
+        return ans
+            
+            

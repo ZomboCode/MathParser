@@ -1,12 +1,6 @@
 from tree import *
 from collections import deque
 #check if string is float
-def is_num(text):
-    try:
-        float(text)
-        return True
-    except:
-        return False
     
 #add operator to stack and do changes
 def appendStack(stack, output, c):
@@ -31,6 +25,7 @@ def parser(text):
     output = []
     error = ""
     text = text.replace(" ", "")
+    text = text.replace("^", "**")
 
     space_funcs = {}
     for func in funcs:
@@ -151,7 +146,7 @@ def blitzkrieg(arr, x):
         print(ansStack[0])
 
 #builds tree from reverse polish notation
-def blitzkriegToTree(arr, x):
+def blitzkriegToTree(arr):
     ansStack = deque()
     for i in arr:
         if i == "x":
@@ -168,15 +163,24 @@ def blitzkriegToTree(arr, x):
             ansStack.pop()
             ansStack.append(a)
     
-    print(ansStack[0].calculate(2))
+    return ansStack[0]
+
+def finalSolution(text):
+    sx = parser(text)
+    return blitzkriegToTree(sx)
             
 
-    
 
+tree1 = finalSolution("1/cos(x)**2")
+print(tree1.intergral(0, 1, 0.001))
+
+'''
 sx = parser("3 + 4 * 2 / (1-5) ** 2.5 * 3")
 blitzkrieg(sx, 2)
 blitzkriegToTree(sx, 2)
 
-sy = parser("sin(5x**2)-5/9")
+sy = parser("sin(5x**2)-0/(9+9) + 9/9 - 1")
 blitzkrieg(sy, 2)
-blitzkriegToTree(sy, 2)
+print(sy)
+ty = blitzkriegToTree(sy, 2)
+ty.printTree()'''
